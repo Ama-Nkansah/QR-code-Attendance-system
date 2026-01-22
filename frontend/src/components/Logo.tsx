@@ -2,7 +2,7 @@ import React from 'react';
 
 export const Logo: React.FC = () => {
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-2 p-3">
       <svg
         width="40"
         height="40"
