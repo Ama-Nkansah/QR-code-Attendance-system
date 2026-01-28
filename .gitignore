@@ -56,11 +56,39 @@ __pycache__/
 *$py.class
 *.so
 .Python
+
+# Virtual environments
 venv/
 ENV/
 env/
+.venv/
+env.bak/
+venv.bak/
+
+# Distribution / packaging
 *.egg-info/
+dist/
+build/
+*.egg
+.eggs/
+
+# Testing
 .pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Flask
+instance/
+.webassets-cache
+
+# MySQL
+*.sql
+*.dump
+
+# Environment variables (database credentials)
+.env
+.env.local
 
 # Logs
 logs/
