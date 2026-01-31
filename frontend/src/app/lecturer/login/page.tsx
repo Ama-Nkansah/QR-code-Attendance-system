@@ -113,6 +113,16 @@ export default function LecturerLoginPage() {
               >
                 Sign In
               </Button>
+
+              <p className="text-center text-sm text-gray-600">
+                Don't have an account?{' '}
+                <Link
+                  href="/lecturer/signup"
+                  className="text-orange-600 hover:text-orange-700 font-medium transition-colors"
+                >
+                  Sign up
+                </Link>
+              </p>
             </div>
           </form>
         </div>

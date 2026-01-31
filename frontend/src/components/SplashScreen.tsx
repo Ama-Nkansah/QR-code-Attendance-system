@@ -1,23 +1,31 @@
 "use client"
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from './Button';
 import { Logo } from './Logo';
 import { AcademicIllustrations } from './AcademicIllustrations';
+import { FeedbackModal } from './FeedbackModal';
 import Link from 'next/link';
 
 export const SplashScreen: React.FC = () => {
+  const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
+
   return (
     <div className="min-h-screen bg-linear-to-br from-orange-50 via-amber-50 to-yellow-50 flex flex-col relative overflow-hidden">
       <header className="w-full px-6 py-4 flex justify-between items-center relative z-10">
         <Logo />
-        <Link
-          href="/feedback"
-          className="text-orange-600 hover:text-orange-700 font-medium transition-colors"
+        <button
+          onClick={() => setIsFeedbackModalOpen(true)}
+          className="text-orange-600 hover:text-orange-700 font-medium transition-colors cursor-pointer"
         >
           Feedback
-        </Link>
+        </button>
       </header>
+
+      <FeedbackModal
+        isOpen={isFeedbackModalOpen}
+        onClose={() => setIsFeedbackModalOpen(false)}
+      />
 
       <main className="flex-1 flex items-center justify-center px-6 relative">
         <AcademicIllustrations />
