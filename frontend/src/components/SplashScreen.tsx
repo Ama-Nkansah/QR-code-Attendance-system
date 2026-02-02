@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 import { Button } from './Button';
 import { Logo } from './Logo';
 import { AcademicIllustrations } from './AcademicIllustrations';
@@ -38,9 +39,26 @@ export const SplashScreen: React.FC = () => {
             >
               Attendo
             </h1>
-            <p className=" text-lg md:text-xl text-gray-700 max-w-lg mx-auto leading-relaxed">
-              Mark your attendance instantly by scanning your QR code.
-            </p>
+            <motion.p
+              className="text-lg md:text-xl text-gray-700 max-w-lg mx-auto leading-relaxed"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+            >
+              {Array.from("Mark your attendance instantly by scanning your QR code.").map((char, index) => (
+                <motion.span
+                  key={index}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{
+                    duration: 0.05,
+                    delay: 0.5 + index * 0.03
+                  }}
+                >
+                  {char}
+                </motion.span>
+              ))}
+            </motion.p>
           </div>
 
           <div className="space-y-4 pt-4">
