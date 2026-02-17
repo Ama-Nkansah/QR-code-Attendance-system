@@ -22,6 +22,8 @@ dist/
 
 # Personal tracking files
 TODO.md
+ROADMAP.md
+
 
 # Debug
 npm-debug.log*
