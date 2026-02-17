@@ -4,7 +4,13 @@
 
 **Two User Types:**
 1. **Lecturers** - Create courses, start attendance sessions, view reports
-2. **Students** - Join sessions, scan QR codes, view attendance history
+2. **Students** - Mark attendance via phone, view attendance history
+
+**Attendance Model:**
+- Lecturer starts session with a duration timer and GPS auto-captured from their device
+- Students fetch the current rotating QR on their own phone screen
+- Students confirm attendance — GPS validates physical presence, no phone raising needed
+- Session auto-expires when timer runs out
 
 ---
 
@@ -56,19 +62,13 @@ Step 4: Auto-Login → Dashboard
 │   Welcome, John Doe              │
 │   Dept: Computer Science | L200  │
 │                                  │
-│   🔴 ACTIVE SESSIONS NOW         │
+│   ACTIVE SESSIONS NOW            │
 │   ┌──────────────────────────┐  │
 │   │ CSC 201 - Data Struct    │  │
 │   │ Dr. Mensah               │  │
 │   │ Started: 10:00 AM        │  │
-│   │ [ Scan Attendance ]      │  │  ← Can scan now
-│   └──────────────────────────┘  │
-│                                  │
-│   ┌──────────────────────────┐  │
-│   │ CSC 205 - Algorithms     │  │
-│   │ Prof. Boateng            │  │
-│   │ Started: 10:05 AM        │  │
-│   │ [ Scan Attendance ]      │  │
+│   │ Time Left: 12:34         │  │
+│   │ [ Mark Attendance ]      │  │  ← Tap to mark
 │   └──────────────────────────┘  │
 │                                  │
 │   [ View My Courses ]            │
@@ -120,76 +120,61 @@ Step 1: Student in Dashboard
 │   │ CSC 201 - Data Struct    │  │
 │   │ Dr. Mensah               │  │
 │   │ Started: 10:00 AM        │  │
-│   │ [ Scan Attendance ]      │  │  ← Click this
+│   │ Time Left: 12:34         │  │
+│   │ [ Mark Attendance ]      │  │  ← Tap this
 │   └──────────────────────────┘  │
 └──────────────────────────────────┘
                 ↓
-Step 2: Camera Opens
+Step 2: App fetches current QR from backend
+        GPS permission requested (if not already granted)
 ┌──────────────────────────────────┐
-│   QR CODE SCANNER                │
-│                                  │
-│   ┌──────────────────────────┐  │
-│   │                          │  │
-│   │    [CAMERA VIEW]         │  │
-│   │                          │  │
-│   │      📷 Point at QR      │  │
-│   │                          │  │
-│   └──────────────────────────┘  │
-│                                  │
-│   Scanning for:                  │
+│   MARK ATTENDANCE                │
 │   CSC 201 - Data Structures      │
-│                                  │
-│   [ Cancel ]                     │
-└──────────────────────────────────┘
-                ↓
-Step 3a: Student Points Phone at Lecturer's Screen
-┌──────────────────────────────────┐
-│   LECTURER'S SCREEN/PROJECTOR    │
-│   (In the classroom)             │
 │                                  │
 │   ┌──────────────────────────┐  │
 │   │  ████████████████████    │  │
-│   │  ██ ▄▄▄▄▄ █▀▄█ ▄▄▄▄▄ ██  │  │
-│   │  ██ █   █ █ ▀█ █   █ ██  │  │
-│   │  ██ █▄▄▄█ █▄ █ █▄▄▄█ ██  │  │
-│   │  ████████████████████    │  │  ← Rotating QR Code
-│   │                          │  │     (Changes every 30s)
-│   │  CSC 201 - Data Struct   │  │
-│   │  15 students present     │  │
+│   │  ██ ▄▄▄▄▄ █▀▄█ ▄▄▄▄▄ ██ │  │  ← QR displayed on
+│   │  ██ █   █ █ ▀█ █   █ ██ │  │    student's own phone
+│   │  ██ █▄▄▄█ █▄ █ █▄▄▄█ ██ │  │    (silently rotates
+│   │  ████████████████████    │  │     every 30s)
 │   └──────────────────────────┘  │
+│                                  │
+│   [ Confirm Attendance ]         │  ← Tap to submit
+│   [ Cancel ]                     │
 └──────────────────────────────────┘
                 ↓
-Step 3b: Scan Detected → Processing
+Step 3: On tap — app submits QR token + GPS coords silently
 ┌──────────────────────────────────┐
 │   PROCESSING...                  │
 │                                  │
-│   ⏳ Verifying attendance...     │
+│   Verifying attendance...        │
 │                                  │
 │   Backend checks:                │
-│   ✓ QR signature valid           │
-│   ✓ Session is active            │
-│   ✓ Department & level match     │
-│   ✓ Not duplicate attendance     │
-│   ✓ Auto-enrolling in course... │
+│   - QR signature valid           │
+│   - QR not expired               │
+│   - Session timer active         │
+│   - GPS within classroom range   │
+│   - Not duplicate attendance     │
+│   - Auto-enrolling if new...     │
 └──────────────────────────────────┘
                 ↓
 Step 4a: SUCCESS - First Time in Course
 ┌──────────────────────────────────┐
-│   ✅ ATTENDANCE MARKED!          │
+│   ATTENDANCE MARKED!             │
 │                                  │
 │   Course: CSC 201 - Data Struct  │
 │   Lecturer: Dr. Mensah           │
 │   Time: 10:12 AM                 │
 │                                  │
-│   🎉 You've been enrolled in     │
-│      this course!                │
+│   You have been enrolled in      │
+│   this course!                   │
 │                                  │
 │   [ Back to Dashboard ]          │
 └──────────────────────────────────┘
                 ↓
 Step 4b: SUCCESS - Already Enrolled
 ┌──────────────────────────────────┐
-│   ✅ ATTENDANCE MARKED!          │
+│   ATTENDANCE MARKED!             │
 │                                  │
 │   Course: CSC 201 - Data Struct  │
 │   Lecturer: Dr. Mensah           │
@@ -212,44 +197,59 @@ Step 4b: SUCCESS - Already Enrolled
 
 Error 1: Already Marked Attendance
 ┌──────────────────────────────────┐
-│   ❌ ALREADY MARKED              │
+│   ALREADY MARKED                 │
 │                                  │
-│   You've already marked          │
+│   You have already marked        │
 │   attendance for this session.   │
 │                                  │
 │   [ Back to Dashboard ]          │
 └──────────────────────────────────┘
 
-Error 2: Wrong QR Code (Different Session)
+Error 2: QR Code Expired (took too long to confirm)
 ┌──────────────────────────────────┐
-│   ❌ INVALID QR CODE             │
+│   QR CODE EXPIRED                │
 │                                  │
-│   This QR code is for a          │
-│   different session.             │
-│                                  │
-│   Please scan the correct QR.    │
+│   The QR code has refreshed.     │
+│   Please tap Mark Attendance     │
+│   again to get the latest code.  │
 │                                  │
 │   [ Try Again ]                  │
 └──────────────────────────────────┘
 
-Error 3: QR Code Expired
+Error 3: Session Timer Elapsed
 ┌──────────────────────────────────┐
-│   ❌ QR CODE EXPIRED             │
+│   SESSION ENDED                  │
 │                                  │
-│   This QR code has expired.      │
-│   Please scan the current QR.    │
-│                                  │
-│   [ Try Again ]                  │
-└──────────────────────────────────┘
-
-Error 4: Session Ended
-┌──────────────────────────────────┐
-│   ❌ SESSION ENDED               │
-│                                  │
-│   This attendance session has    │
-│   been closed by the lecturer.   │
+│   The attendance window for      │
+│   this session has closed.       │
 │                                  │
 │   [ Back to Dashboard ]          │
+└──────────────────────────────────┘
+
+Error 4: Outside Classroom Range (GPS check failed)
+┌──────────────────────────────────┐
+│   LOCATION CHECK FAILED          │
+│                                  │
+│   You must be in the classroom   │
+│   to mark attendance.            │
+│                                  │
+│   Make sure GPS is enabled       │
+│   and try again.                 │
+│                                  │
+│   [ Try Again ]                  │
+└──────────────────────────────────┘
+
+Error 5: GPS Permission Denied
+┌──────────────────────────────────┐
+│   LOCATION REQUIRED              │
+│                                  │
+│   Attendo needs your location    │
+│   to verify classroom presence.  │
+│                                  │
+│   Please enable location in      │
+│   your browser settings.         │
+│                                  │
+│   [ Open Settings ]              │
 └──────────────────────────────────┘
 ```
 
@@ -314,7 +314,7 @@ Step 4: Auto-Login → Dashboard
 │   LECTURER DASHBOARD                                     │
 │   Dr. Mensah (Staff ID: LEC001)                          │
 │                                                          │
-│   📚 MY COURSES                                          │
+│   MY COURSES                                             │
 │   ┌────────────────────────────────────────────────┐    │
 │   │ CSC 201 - Data Structures                      │    │
 │   │ Students: 45 | Sessions: 12                    │    │
@@ -329,7 +329,7 @@ Step 4: Auto-Login → Dashboard
 │                                                          │
 │   [ + Create New Course ]                               │
 │                                                          │
-│   🔴 ACTIVE SESSIONS                                     │
+│   ACTIVE SESSIONS                                        │
 │   (No active sessions)                                   │
 │                                                          │
 │   [ Attendance Reports ] [ My Profile ]                  │
@@ -397,83 +397,78 @@ Step 1: From Dashboard, Click "Start Session"
 │   Session Type:                  │
 │   [▼ Lecture]                    │  ← Lecture/Tutorial/Lab
 │                                  │
-│   QR Rotation Interval:          │
-│   [30] seconds                   │  ← Default 30
+│   Duration:                      │
+│   [▼ 15 mins]                    │  ← 5/10/15/20/30 mins
+│                                  │
+│   Your classroom location will   │
+│   be captured automatically.     │
 │                                  │
 │   [ Start Session ]              │
 │   [ Cancel ]                     │
 └──────────────────────────────────┘
                 ↓
-Step 2: Session Created → QR Display Page
+Step 2: Browser requests GPS permission (one-time)
+        Classroom coordinates captured silently
+                ↓
+Step 3: Session Created → Live Session View
 ┌────────────────────────────────────────────────────────┐
-│   🔴 LIVE SESSION                                      │
+│   LIVE SESSION                                         │
 │   CSC 201 - Data Structures                            │
 │   Week 3 - Linked Lists                                │
 │   Started: 10:00 AM                                    │
 │                                                        │
-│   ┌────────────────────────────────────────────┐      │
-│   │  ████████████████████████████████████      │      │
-│   │  ████ ▄▄▄▄▄ █▀ ▄▄██▀▄ ▄ ▄▄▄▄▄ ████         │      │
-│   │  ████ █   █ █▄▀█ ▄ ██▀█ █   █ ████         │      │
-│   │  ████ █▄▄▄█ █ ▄ ▀▄ ▀▀▀█ █▄▄▄█ ████         │      │
-│   │  ████▄▄▄▄▄▄▄█▀▄▀█ █ █ █▄▄▄▄▄▄▄████         │      │
-│   │  ████ ▀█▀▄ ▄ ▄ ▀▀▄█▀█▄▀█  ▀▀▄████         │      │
-│   │  ████████████████████████████████████      │      │
-│   │                                            │      │
-│   │  Scan this QR code to mark attendance     │      │
-│   │  Code rotates every 30 seconds            │      │
-│   └────────────────────────────────────────────┘      │
+│   Time Remaining:                                      │
+│        14:32                     ← Countdown timer    │
 │                                                        │
-│   📊 ATTENDANCE STATS                                  │
-│   ┌─────────────────────┐                             │
-│   │ Students Present: 15                              │
-│   │ Last Scan: 10:12 AM - John Doe (IND12345)         │
-│   └─────────────────────┘                             │
+│   Students Present: 15                                 │
 │                                                        │
-│   📋 RECENT SCANS                                      │
-│   • 10:12 AM - John Doe (IND12345) ✅ Enrolled        │
-│   • 10:11 AM - Jane Smith (IND12346) ✅               │
-│   • 10:10 AM - Mike Johnson (IND12347) ✅             │
-│   • 10:09 AM - Sarah Wilson (IND12348) ✅ Enrolled    │
+│   RECENT SCANS                                         │
+│   • 10:12 AM - John Doe (IND12345) - Enrolled         │
+│   • 10:11 AM - Jane Smith (IND12346)                  │
+│   • 10:10 AM - Mike Johnson (IND12347)                │
+│   • 10:09 AM - Sarah Wilson (IND12348) - Enrolled     │
 │                                                        │
-│   [ End Session ]  [ Download Report ]                │
+│   [ End Early ]  [ Download Report ]                  │
 └────────────────────────────────────────────────────────┘
-```
-
----
-
-### 5. Ending a Session
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                   END SESSION FLOW                           │
-└─────────────────────────────────────────────────────────────┘
-
-Step 1: Click "End Session"
-┌──────────────────────────────────┐
-│   END SESSION?                   │
-│                                  │
-│   Are you sure you want to end   │
-│   this attendance session?       │
-│                                  │
-│   CSC 201 - Data Structures      │
-│   15 students marked present     │
-│                                  │
-│   [ End Session ]                │
-│   [ Cancel ]                     │
-└──────────────────────────────────┘
                 ↓
-Step 2: Session Ended → Report Page
+Step 4a: Timer reaches 0:00 → Session auto-closes
 ┌──────────────────────────────────┐
-│   ✅ SESSION ENDED               │
+│   SESSION ENDED                  │
 │                                  │
 │   CSC 201 - Data Structures      │
-│   Duration: 25 minutes           │
+│   Duration: 15 minutes           │
 │   Total Present: 15/45           │
 │                                  │
 │   [ View Full Report ]           │
 │   [ Back to Dashboard ]          │
 └──────────────────────────────────┘
+```
+
+---
+
+### 5. Ending a Session Early (Optional)
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                   END EARLY FLOW                             │
+└─────────────────────────────────────────────────────────────┘
+
+Step 1: Click "End Early"
+┌──────────────────────────────────┐
+│   END SESSION EARLY?             │
+│                                  │
+│   Are you sure you want to end   │
+│   this session before the timer? │
+│                                  │
+│   CSC 201 - Data Structures      │
+│   15 students marked present     │
+│   Time Remaining: 08:45          │
+│                                  │
+│   [ End Now ]                    │
+│   [ Cancel ]                     │
+└──────────────────────────────────┘
+                ↓
+Step 2: Session Ended → Report Page (same as timer expiry)
 ```
 
 ---
@@ -486,46 +481,46 @@ Step 2: Session Ended → Report Page
 └─────────────────────────────────────────────────────────────┘
 
 LECTURER CREATES SESSION:
-┌──────────┐      ┌──────────┐      ┌──────────────┐
-│ Lecturer │ ───→ │ Backend  │ ───→ │  Database    │
-│  (Web)   │      │   API    │      │  - Session   │
-└──────────┘      └──────────┘      │  - QR Secret │
-                        │            └──────────────┘
-                        ↓
-                  Generate QR
-                  (30s rotation)
+┌──────────┐      ┌──────────┐      ┌──────────────────────┐
+│ Lecturer │ ───→ │ Backend  │ ───→ │  Database            │
+│  (Web)   │      │   API    │      │  - Session           │
+│          │      │          │      │  - QR Secret         │
+│ GPS auto │      │ Captures │      │  - Classroom lat/lng │
+│ captured │      │ GPS      │      │  - Duration / expiry │
+└──────────┘      └──────────┘      └──────────────────────┘
                         │
-                        ↓
-                  ┌──────────┐
-                  │ Frontend │
-                  │ displays │
-                  │    QR    │
-                  └──────────┘
+                  Generate rotating QR
+                  (30s backend-only)
+                  No QR on lecturer screen
+
 
 STUDENT MARKS ATTENDANCE:
-┌──────────┐      ┌──────────┐      ┌──────────────┐
-│ Student  │ ───→ │ Scan QR  │ ───→ │   Backend    │
-│ (Mobile) │      │  Camera  │      │   Validate   │
-└──────────┘      └──────────┘      └──────────────┘
-                                            │
-                                    Checks:
-                                    1. QR signature ✓
-                                    2. Session active ✓
-                                    3. Dept/Level match ✓
-                                    4. Not duplicate ✓
-                                            │
-                                            ↓
-                                    ┌──────────────┐
-                                    │  Database    │
-                                    │  - Enroll    │
-                                    │  - Attendance│
-                                    └──────────────┘
-                                            │
-                                            ↓
-                                    ┌──────────────┐
-                                    │   Success    │
-                                    │   Response   │
-                                    └──────────────┘
+┌──────────┐      ┌──────────────┐      ┌──────────────┐
+│ Student  │ ───→ │ GET /qr      │ ───→ │  Backend     │
+│ (Mobile) │      │ fetch token  │      │  Returns     │
+│          │      └──────────────┘      │  current QR  │
+│          │                            └──────────────┘
+│          │      QR displayed on
+│          │      student's phone
+│          │
+│          │      ┌──────────────┐      ┌──────────────┐
+│          │ ───→ │ POST /attend │ ───→ │  Backend     │
+│  GPS     │      │ token + GPS  │      │  Validate    │
+│ captured │      └──────────────┘      └──────────────┘
+└──────────┘                                   │
+                                       Checks:
+                                       1. QR signature valid
+                                       2. QR not expired
+                                       3. Session timer active
+                                       4. GPS within radius
+                                       5. Not duplicate
+                                               │
+                                               ↓
+                                       ┌──────────────┐
+                                       │  Database    │
+                                       │  - Enroll    │
+                                       │  - Attendance│
+                                       └──────────────┘
 ```
 
 ---
@@ -548,61 +543,82 @@ Backend filters active sessions:
     • student.department = "Computer Science"
     • student.level = "200"
     • session.status = "active"
+    • session.expires_at > now()
 
 RESULT:
-✅ John (CS, 200) → SEES session
-✅ Jane (CS, 200) → SEES session
-❌ Mike (CS, 300) → DOES NOT see (wrong level)
-❌ Sarah (Engineering, 200) → DOES NOT see (wrong dept)
+✓ John (CS, 200) → SEES session
+✓ Jane (CS, 200) → SEES session
+✗ Mike (CS, 300) → DOES NOT see (wrong level)
+✗ Sarah (Engineering, 200) → DOES NOT see (wrong dept)
 ```
 
 ---
 
-## SECURITY FLOW
+## SECURITY MODEL
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                 QR CODE SECURITY                             │
+│                 DUAL-LAYER SECURITY                          │
 └─────────────────────────────────────────────────────────────┘
 
-QR CODE GENERATION (Every 30 seconds):
-┌────────────────────────────────────────────┐
-│ Payload:                                   │
-│   {                                        │
-│     "session_id": 123,                     │
-│     "time_slot": 12345678,  ← Changes!     │
-│     "timestamp": 1234567890                │
-│   }                                        │
-└────────────────────────────────────────────┘
+LAYER 1 — ROTATING QR (Token Validity):
+
+QR CODE GENERATION (Every 30 seconds, backend only):
+┌────────────────────────────────────────┐
+│ Payload:                               │
+│   {                                    │
+│     "session_id": 123,                 │
+│     "time_slot": 12345678,  ← Changes │
+│     "timestamp": 1234567890            │
+│   }                                    │
+└────────────────────────────────────────┘
                 ↓
        Create HMAC Signature
        (using session.qr_secret)
                 ↓
-┌────────────────────────────────────────────┐
-│ Final QR Data:                             │
-│   {                                        │
-│     "p": payload,                          │
-│     "s": "abc123..."  ← Signature          │
-│   }                                        │
-│   Base64 Encoded                           │
-└────────────────────────────────────────────┘
+┌────────────────────────────────────────┐
+│ QR served to authenticated student:    │
+│   {                                    │
+│     "p": payload,                      │
+│     "s": "abc123..."  ← Signature     │
+│   }                                    │
+│   Base64 Encoded                       │
+└────────────────────────────────────────┘
 
-QR CODE VALIDATION:
-┌────────────────────────────────────────────┐
-│ Student scans QR                           │
-└────────────────────────────────────────────┘
+QR is NEVER displayed on lecturer's screen.
+QR is ONLY served via authenticated API to enrolled students.
+
+
+LAYER 2 — GEOLOCATION (Physical Presence):
+
+On session start:
+  → Lecturer's GPS coordinates stored as classroom_lat / classroom_lng
+  → Allowed radius: 100m (configurable per session)
+
+On attendance submission:
+  → Student's GPS coordinates submitted with QR token
+  → Backend calculates distance (Haversine formula)
+  → If distance > allowed_radius: REJECTED
+
+
+COMBINED VALIDATION:
+┌────────────────────────────────────────┐
+│ Student submits: token + GPS           │
+└────────────────────────────────────────┘
                 ↓
-       Decode Base64
+       Decode + verify HMAC signature
                 ↓
-       Verify Signature
-       (using stored qr_secret)
-                ↓
-       Check timestamp
-       (must be < 60s old)
+       Check timestamp (< 60s old)
                 ↓
        Check session_id matches
                 ↓
-       ✅ Valid or ❌ Reject
+       Check session timer not elapsed
+                ↓
+       Check GPS within classroom radius
+                ↓
+       Check not duplicate
+                ↓
+       ✓ Valid or ✗ Reject with reason
 ```
 
 ---
@@ -614,9 +630,10 @@ QR CODE VALIDATION:
 │              SESSION TIMELINE                                │
 └─────────────────────────────────────────────────────────────┘
 
-10:00 AM │ Lecturer starts session
-         │ QR Code #1 generated
-         │ Students can start scanning
+10:00 AM │ Lecturer starts 15-minute session
+         │ GPS auto-captured → classroom coords stored
+         │ QR Code #1 generated (backend only)
+         │ Students see session on their dashboard
          │
 10:00:30 │ QR Code #2 generated (new token)
          │ QR Code #1 still valid (60s grace)
@@ -624,20 +641,95 @@ QR CODE VALIDATION:
 10:01:00 │ QR Code #3 generated
          │ QR Code #1 expires
          │
-10:01:30 │ QR Code #4 generated
-         │ QR Code #2 expires
+   ...   │ QR continues rotating every 30s...
          │
-   ...   │ Continues rotating...
-         │
-10:25:00 │ Lecturer ends session
-         │ No more scanning allowed
-         │ Report generated
+10:15:00 │ Session timer reaches 0:00
+         │ Session auto-closes
+         │ No more attendance accepted
+         │ Report generated automatically
 
-GRACE PERIOD EXAMPLE:
+GRACE PERIOD:
 QR generated at: 10:00:00
-Valid until: 10:01:00 (60 second grace)
-Student scans at 10:00:55 → ✅ Accepted
-Student scans at 10:01:05 → ❌ Expired
+Valid until:      10:01:00 (60 second window)
+Student confirms at 10:00:55 → Accepted
+Student confirms at 10:01:05 → Expired, try again
+```
+
+---
+
+## PROXY ATTACK RESISTANCE
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│              ATTACK SCENARIOS                                │
+└─────────────────────────────────────────────────────────────┘
+
+Attack 1: Student marks attendance from home
+  → GPS check fails (not within classroom radius)
+  → REJECTED
+
+Attack 2: Student shares QR token with absent friend
+  → Friend's GPS is not in classroom
+  → REJECTED
+
+Attack 3: Student uses GPS spoofing app
+  → Requires technical knowledge + developer tools
+  → Much harder than casual sharing
+  → Combined with rotating QR window narrows attack
+
+Attack 4: Student hands phone to friend inside classroom
+  → No technical system can fully prevent this
+  → Disciplinary / policy matter
+
+Attack 5: Old QR screenshot/photo
+  → QR rotates every 30 seconds
+  → Timestamp validation rejects tokens > 60s old
+  → REJECTED
+```
+
+---
+
+## EDGE CASES HANDLED
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    EDGE CASES                                │
+└─────────────────────────────────────────────────────────────┘
+
+1. STUDENT TRIES TO MARK TWICE
+   → Backend checks attendance_records table
+   → If exists: Return error "Already marked"
+
+2. STUDENT CONFIRMS AFTER QR ROTATES
+   → Token submitted is older than 60s
+   → Response: "QR expired, tap Mark Attendance again"
+   → Student fetches fresh QR and resubmits
+
+3. SESSION TIMER EXPIRES WHILE STUDENT IS ON SCREEN
+   → Backend checks session expires_at before accepting
+   → Response: "Session has ended"
+
+4. GPS PERMISSION DENIED
+   → Frontend blocks confirm button
+   → Shows prompt to enable location in settings
+
+5. GPS INACCURATE (indoors / weak signal)
+   → Allowed radius set to 150m to account for drift
+   → Lecturer can adjust radius at session creation if needed
+
+6. LECTURER ENDS EARLY WHILE STUDENT SCANNING
+   → Backend checks session status = 'active'
+   → If ended: Response: "Session closed"
+
+7. NETWORK DISCONNECTION DURING SUBMIT
+   → Frontend shows loading state
+   → Timeout after 10 seconds
+   → Error: "Check your connection and try again"
+
+8. WRONG DEPARTMENT/LEVEL STUDENT
+   → Filtered at backend — session not visible in their list
+   → SQL: WHERE course.department = student.department
+   →      AND course.level = student.level
 ```
 
 ---
@@ -650,7 +742,7 @@ Student scans at 10:01:05 → ❌ Expired
 └─────────────────────────────────────────────────────────────┘
 
 ┌─────────────────┐
-│ Attendo     ≡   │ ← Hamburger menu
+│ Attendo     ≡   │  ← Hamburger menu
 ├─────────────────┤
 │ Active Sessions │
 ├─────────────────┤
@@ -658,63 +750,21 @@ Student scans at 10:01:05 → ❌ Expired
 │ │ CSC 201     │ │
 │ │ Dr. Mensah  │ │
 │ │ 10:00 AM    │ │
-│ │ [Scan Now]  │ │ ← Big tap target
+│ │ 12:34 left  │ │
+│ │ [Mark Now]  │ │  ← Big tap target
 │ └─────────────┘ │
 ├─────────────────┤
 │ ┌─────────────┐ │
 │ │ CSC 205     │ │
 │ │ Prof. Adu   │ │
 │ │ 10:05 AM    │ │
-│ │ [Scan Now]  │ │
+│ │ 08:21 left  │ │
+│ │ [Mark Now]  │ │
 │ └─────────────┘ │
 ├─────────────────┤
 │ [My Courses]    │
 │ [History]       │
 └─────────────────┘
-```
-
----
-
-## EDGE CASES HANDLED
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    EDGE CASES                                │
-└─────────────────────────────────────────────────────────────┘
-
-1. STUDENT TRIES TO SCAN TWICE
-   → Backend checks attendance_records table
-   → If exists: Return error "Already marked"
-   → Prevent duplicate attendance
-
-2. STUDENT SCANS WRONG QR (Different Session)
-   → QR contains session_id: 123
-   → Student selected session_id: 456
-   → Validation fails: "Wrong session"
-
-3. STUDENT SCANS EXPIRED QR
-   → Check timestamp in QR payload
-   → If > 60 seconds old: "QR expired"
-
-4. QR SCREENSHOT/PHOTO ATTACK
-   → QR rotates every 30 seconds
-   → Old screenshots become invalid
-   → Timestamp validation prevents old QRs
-
-5. LECTURER ENDS SESSION WHILE STUDENT SCANNING
-   → Check session.status = 'active'
-   → If status = 'ended': "Session closed"
-
-6. NETWORK DISCONNECTION
-   → Frontend shows loading state
-   → Timeout after 10 seconds
-   → Error message: "Check connection"
-
-7. WRONG DEPARTMENT/LEVEL STUDENT SEES SESSION
-   → Filtered at backend
-   → SQL: WHERE course.department = student.department
-   →      AND course.level = student.level
-   → Won't appear in student's list
 ```
 
 ---
@@ -728,24 +778,26 @@ Student scans at 10:01:05 → ❌ Expired
 
 STUDENT EXPERIENCE:
 ✓ Login in < 5 seconds
-✓ See relevant sessions immediately
-✓ Scan QR in < 10 seconds
+✓ See relevant sessions immediately with time remaining
+✓ Mark attendance in < 5 seconds (no phone raising)
 ✓ Instant feedback (success/error)
-✓ No confusion about which session to join
+✓ Clear error messages with actionable steps
 
 LECTURER EXPERIENCE:
 ✓ Start session in < 3 clicks
-✓ See real-time attendance updates
-✓ QR visible on screen/projector
-✓ Easy session management
+✓ GPS captured automatically — no manual input
+✓ See real-time attendance count and recent scans
+✓ Session closes itself — no manual end needed
 ✓ Download reports with 1 click
 
 SYSTEM SECURITY:
 ✓ No duplicate attendance
-✓ No cross-session scanning
+✓ No remote attendance (GPS enforced)
 ✓ PIN/password hashed
 ✓ JWT tokens expire
-✓ QR codes rotate and expire
+✓ QR codes rotate every 30s and expire after 60s
+✓ QR never exposed on public screen
+✓ Classroom coordinates stored server-side only
 ```
 
 ---
@@ -753,15 +805,17 @@ SYSTEM SECURITY:
 ## SUMMARY
 
 **STUDENT JOURNEY:**
-Sign up → Login → See filtered sessions → Select → Scan QR → Marked present
+Sign up → Login → See filtered sessions with timer → Tap Mark Attendance → QR shown on own phone → Tap Confirm → GPS + QR validated → Marked present
 
 **LECTURER JOURNEY:**
-Sign up → Login → Create course → Start session → Display QR → Students scan → End session → View report
+Sign up → Login → Create course → Start session (set duration, GPS auto-captured) → Watch countdown + live attendance → Session auto-closes → View report
 
 **KEY FEATURES:**
-- Auto-enrollment on first scan
+- Auto-enrollment on first attendance mark
 - Department/Level filtering
-- Rotating QR codes (30s)
-- Real-time attendance tracking
-- No manual enrollment needed
+- Session duration timer (auto-close)
+- Rotating QR codes (30s, backend only)
+- Geolocation presence validation (100-150m radius)
+- QR displayed on student's own phone — no phone raising
+- Real-time attendance tracking for lecturer
 - Mobile-first design
