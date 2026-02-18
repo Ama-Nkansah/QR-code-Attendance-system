@@ -9,18 +9,6 @@ jwt = JWTManager()
 
 
 def create_app(config_name='development'):
-    """
-    Flask application factory.
-
-    Creates and configures a Flask application instance based on the
-    provided configuration name (development, production, or testing).
-
-    Args:
-        config_name (str): Configuration to use ('development', 'production', 'testing')
-
-    Returns:
-        Flask: Configured Flask application instance
-    """
     app = Flask(__name__)
 
     # 1. Load configuration from config.py
@@ -33,6 +21,10 @@ def create_app(config_name='development'):
 
     jwt.init_app(app)
     db.init_app(app)
+
+    with app.app_context():
+        from app import models  # noqa: F401 — registers models with SQLAlchemy
+        db.create_all()
 
     # 3. Register blueprints (routes)
     # TODO: Uncomment when you create these route files
