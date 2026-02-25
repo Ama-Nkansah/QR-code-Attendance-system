@@ -1,5 +1,6 @@
 import os
 from datetime import timedelta
+from urllib.parse import quote_plus
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -16,7 +17,7 @@ class Config:
     DB_PASSWORD = os.getenv('DB_PASSWORD', '')
 
     SQLALCHEMY_DATABASE_URI = (
-        f"mysql+mysqlconnector://{DB_USER}:{DB_PASSWORD}@"
+        f"mysql+mysqlconnector://{DB_USER}:{quote_plus(DB_PASSWORD)}@"
         f"{DB_HOST}:{DB_PORT}/{DB_NAME}"
     )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
