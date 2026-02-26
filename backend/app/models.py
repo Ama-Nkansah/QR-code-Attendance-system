@@ -1,48 +1,17 @@
-"""
-Database models for Attendo.
-
-Each class here maps directly to a table in MySQL.
-SQLAlchemy handles creating, reading, and writing rows for us.
-"""
-
 from datetime import datetime, timezone
 from app import db
 
 
-# ---------------------------------------------------------------------------
-# STUDENT
-# Represents a student account.
-# ---------------------------------------------------------------------------
-
 class Student(db.Model):
-    """
-    Stores student accounts.
-
-    A student belongs to a department and level.
-    The backend uses department + level to filter which sessions they see.
-    """
-
     __tablename__ = 'students'
-
-    # Primary key — auto-increments (1, 2, 3 ...)
     id = db.Column(db.Integer, primary_key=True)
-
-    # Student's university index number e.g. "IND12345" — must be unique
     index_number = db.Column(db.String(20), unique=True, nullable=False)
-
     full_name = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
-
-    # Department e.g. "Computer Science"
     department = db.Column(db.String(100), nullable=False)
-
-    # Level e.g. "100", "200", "300", "400"
     level = db.Column(db.String(10), nullable=False)
-
     # PIN is stored as a bcrypt hash — never store plain PINs
     pin_hash = db.Column(db.String(255), nullable=False)
-
-    # When the account was created
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
     # Relationship: one student can have many attendance records
@@ -52,33 +21,14 @@ class Student(db.Model):
         return f'<Student {self.index_number} - {self.full_name}>'
 
 
-# ---------------------------------------------------------------------------
-# LECTURER
-# Represents a lecturer account.
-# ---------------------------------------------------------------------------
-
 class Lecturer(db.Model):
-    """
-    Stores lecturer accounts.
-
-    Lecturers create courses and start attendance sessions.
-    """
-    
     __tablename__ = 'lecturers'
-
     id = db.Column(db.Integer, primary_key=True)
-
-    # Staff ID e.g. "LEC001" — must be unique
     staff_id = db.Column(db.String(20), unique=True, nullable=False)
-
     full_name = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
-
-    # Password stored as a bcrypt hash
     password_hash = db.Column(db.String(255), nullable=False)
-
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
-
     # Relationship: one lecturer can have many courses
     courses = db.relationship('Course', backref='lecturer', lazy=True)
 
@@ -86,47 +36,19 @@ class Lecturer(db.Model):
         return f'<Lecturer {self.staff_id} - {self.full_name}>'
 
 
-# ---------------------------------------------------------------------------
-# COURSE
-# Represents a course created by a lecturer.
-# ---------------------------------------------------------------------------
-
 class Course(db.Model):
-    """
-    Stores courses.
-
-    A course belongs to one lecturer.
-    The department and level on the course determine which students see its sessions.
-    """
-
     __tablename__ = 'courses'
-
     id = db.Column(db.Integer, primary_key=True)
-
-    # e.g. "CSC 201"
     course_code = db.Column(db.String(20), nullable=False)
-
-    # e.g. "Data Structures"
     course_name = db.Column(db.String(150), nullable=False)
-
-    # e.g. "Computer Science"
     department = db.Column(db.String(100), nullable=False)
-
-    # e.g. "200"
     level = db.Column(db.String(10), nullable=False)
-
-    # e.g. "2024/2025"
     academic_year = db.Column(db.String(20), nullable=False)
-
-    # e.g. "1" or "2"
     semester = db.Column(db.String(5), nullable=False)
-
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
-
     # Foreign key — links this course to the lecturer who created it
     # db.ForeignKey means: this value must exist as an id in the lecturers table
     lecturer_id = db.Column(db.Integer, db.ForeignKey('lecturers.id'), nullable=False)
-
     # Relationship: one course can have many sessions
     sessions = db.relationship('Session', backref='course', lazy=True)
 
@@ -134,10 +56,6 @@ class Course(db.Model):
         return f'<Course {self.course_code} - {self.course_name}>'
 
 
-# ---------------------------------------------------------------------------
-# SESSION
-# Represents one attendance-taking session started by a lecturer.
-# ---------------------------------------------------------------------------
 
 class Session(db.Model):
     """
@@ -203,12 +121,7 @@ class Session(db.Model):
 
     def __repr__(self):
         return f'<Session {self.id} - {self.session_name} [{self.status}]>'
-
-
-# ---------------------------------------------------------------------------
-# ATTENDANCE RECORD
-# One row = one student marked present in one session.
-# ---------------------------------------------------------------------------
+    
 
 class AttendanceRecord(db.Model):
     """

@@ -4,12 +4,15 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/Button';
 import { Logo } from '@/components/Logo';
+import { PasswordToggleIcon } from '@/components/PasswordToggleIcon';
 
 export default function StudentLoginPage() {
   const [formData, setFormData] = useState({
     indexNumber: '',
     pin: ''
   });
+
+  const [showPin, setShowPin] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -65,17 +68,24 @@ export default function StudentLoginPage() {
                 <label htmlFor="pin" className="block text-sm font-medium text-gray-700 mb-2">
                   4-Digit PIN
                 </label>
-                <input
-                  id="pin"
-                  name="pin"
-                  type="password"
-                  required
-                  maxLength={4}
-                  value={formData.pin}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition-all"
-                  placeholder="Enter your 4-digit PIN"
-                />
+                <div className="relative">
+                  <input
+                    id="pin"
+                    name="pin"
+                    type={showPin ? 'text' : 'password'}
+                    required
+                    maxLength={4}
+                    value={formData.pin}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition-all"
+                    placeholder="Enter your 4-digit PIN"
+                  />
+                  <PasswordToggleIcon
+                    visible={showPin}
+                    onToggle={() => setShowPin(prev => !prev)}
+                    label={showPin ? 'Hide PIN' : 'Show PIN '}
+                  />
+                </div>
               </div>
             </div>
 

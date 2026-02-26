@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/Button';
 import { Logo } from '@/components/Logo';
+import { PasswordToggleIcon } from '@/components/PasswordToggleIcon';
 
 export default function StudentSignupPage() {
   const [formData, setFormData] = useState({
@@ -27,6 +28,9 @@ export default function StudentSignupPage() {
     pin: false,
     confirmPin: false
   });
+
+  const [showPin, setShowPin] = useState(false);
+  const [showConfirmPin, setShowConfirmPin] = useState(false);
 
   const validateEmail = (email: string): string => {
     if (!email) return '';
@@ -259,19 +263,26 @@ export default function StudentSignupPage() {
                 <label htmlFor="pin" className="block text-sm font-medium text-gray-700 mb-2">
                   4-Digit PIN
                 </label>
-                <input
-                  id="pin"
-                  name="pin"
-                  type="password"
-                  required
-                  maxLength={4}
-                  value={formData.pin}
-                  onChange={handleChange}
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:border-transparent outline-none transition-all ${
-                    touched.pin && errors.pin ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-orange-500'
-                  }`}
-                  placeholder="Create a 4-digit PIN"
-                />
+                <div className="relative">
+                  <input
+                    id="pin"
+                    name="pin"
+                    type={showPin ? 'text' : 'password'}
+                    required
+                    maxLength={4}
+                    value={formData.pin}
+                    onChange={handleChange}
+                    className={`w-full px-4 py-3 pr-12 border rounded-lg focus:ring-2 focus:border-transparent outline-none transition-all ${
+                      touched.pin && errors.pin ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-orange-500'
+                    }`}
+                    placeholder="Create a 4-digit PIN"
+                  />
+                  <PasswordToggleIcon
+                    visible={showPin}
+                    onToggle={() => setShowPin(prev => !prev)}
+                    label={showPin ? 'Hide PIN' : 'Show PIN'}
+                  />
+                </div>
                 {touched.pin && errors.pin && (
                   <p className="mt-1 text-sm text-red-600">{errors.pin}</p>
                 )}
@@ -284,19 +295,26 @@ export default function StudentSignupPage() {
                 <label htmlFor="confirmPin" className="block text-sm font-medium text-gray-700 mb-2">
                   Confirm PIN
                 </label>
-                <input
-                  id="confirmPin"
-                  name="confirmPin"
-                  type="password"
-                  required
-                  maxLength={4}
-                  value={formData.confirmPin}
-                  onChange={handleChange}
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:border-transparent outline-none transition-all ${
-                    touched.confirmPin && errors.confirmPin ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-orange-500'
-                  }`}
-                  placeholder="Confirm your PIN"
-                />
+                <div className="relative">
+                  <input
+                    id="confirmPin"
+                    name="confirmPin"
+                    type={showConfirmPin ? 'text' : 'password'}
+                    required
+                    maxLength={4}
+                    value={formData.confirmPin}
+                    onChange={handleChange}
+                    className={`w-full px-4 py-3 pr-12 border rounded-lg focus:ring-2 focus:border-transparent outline-none transition-all ${
+                      touched.confirmPin && errors.confirmPin ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-orange-500'
+                    }`}
+                    placeholder="Confirm your PIN"
+                  />
+                  <PasswordToggleIcon
+                    visible={showConfirmPin}
+                    onToggle={() => setShowConfirmPin(prev => !prev)}
+                    label={showConfirmPin ? 'Hide PIN' : 'Show PIN'}
+                  />
+                </div>
                 {touched.confirmPin && errors.confirmPin && (
                   <p className="mt-1 text-sm text-red-600">{errors.confirmPin}</p>
                 )}

@@ -1,9 +1,12 @@
+
+
 "use client"
 
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/Button';
 import { Logo } from '@/components/Logo';
+import { PasswordToggleIcon } from '@/components/PasswordToggleIcon';
 
 export default function LecturerLoginPage() {
   const [formData, setFormData] = useState({
@@ -11,6 +14,8 @@ export default function LecturerLoginPage() {
     email: '',
     password: ''
   });
+
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -82,16 +87,22 @@ export default function LecturerLoginPage() {
                 <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
                   Password
                 </label>
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  required
-                  value={formData.password}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition-all"
-                  placeholder="Enter your password"
-                />
+                <div className="relative">
+                  <input
+                    id="password"
+                    name="password"
+                    type={showPassword ? 'text' : 'password'}
+                    required
+                    value={formData.password}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition-all"
+                    placeholder="Enter your password"
+                  />
+                  <PasswordToggleIcon
+                    visible={showPassword}
+                    onToggle={() => setShowPassword(prev => !prev)}
+                  />
+                </div>
               </div>
             </div>
 
@@ -115,7 +126,7 @@ export default function LecturerLoginPage() {
               </Button>
 
               <p className="text-center text-sm text-gray-600">
-                Don't have an account?{' '}
+                Don&apos;t have an account?{' '}
                 <Link
                   href="/lecturer/signup"
                   className="text-orange-600 hover:text-orange-700 font-medium transition-colors"

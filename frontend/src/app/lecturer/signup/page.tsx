@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/Button';
 import { Logo } from '@/components/Logo';
+import { PasswordToggleIcon } from '@/components/PasswordToggleIcon';
 
 export default function LecturerSignupPage() {
   const [formData, setFormData] = useState({
@@ -25,6 +26,9 @@ export default function LecturerSignupPage() {
     password: false,
     confirmPassword: false
   });
+
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const validateEmail = (email: string): string => {
     if (!email) return '';
@@ -201,18 +205,24 @@ export default function LecturerSignupPage() {
                 <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
                   Password
                 </label>
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  required
-                  value={formData.password}
-                  onChange={handleChange}
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:border-transparent outline-none transition-all ${
-                    touched.password && errors.password ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-orange-500'
-                  }`}
-                  placeholder="Create a password"
-                />
+                <div className="relative">
+                  <input
+                    id="password"
+                    name="password"
+                    type={showPassword ? 'text' : 'password'}
+                    required
+                    value={formData.password}
+                    onChange={handleChange}
+                    className={`w-full px-4 py-3 pr-12 border rounded-lg focus:ring-2 focus:border-transparent outline-none transition-all ${
+                      touched.password && errors.password ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-orange-500'
+                    }`}
+                    placeholder="Create a password"
+                  />
+                  <PasswordToggleIcon
+                    visible={showPassword}
+                    onToggle={() => setShowPassword(prev => !prev)}
+                  />
+                </div>
                 {touched.password && errors.password && (
                   <p className="mt-1 text-sm text-red-600">{errors.password}</p>
                 )}
@@ -222,18 +232,24 @@ export default function LecturerSignupPage() {
                 <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
                   Confirm Password
                 </label>
-                <input
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  type="password"
-                  required
-                  value={formData.confirmPassword}
-                  onChange={handleChange}
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:border-transparent outline-none transition-all ${
-                    touched.confirmPassword && errors.confirmPassword ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-orange-500'
-                  }`}
-                  placeholder="Confirm your password"
-                />
+                <div className="relative">
+                  <input
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    required
+                    value={formData.confirmPassword}
+                    onChange={handleChange}
+                    className={`w-full px-4 py-3 pr-12 border rounded-lg focus:ring-2 focus:border-transparent outline-none transition-all ${
+                      touched.confirmPassword && errors.confirmPassword ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-orange-500'
+                    }`}
+                    placeholder="Confirm your password"
+                  />
+                  <PasswordToggleIcon
+                    visible={showConfirmPassword}
+                    onToggle={() => setShowConfirmPassword(prev => !prev)}
+                  />
+                </div>
                 {touched.confirmPassword && errors.confirmPassword && (
                   <p className="mt-1 text-sm text-red-600">{errors.confirmPassword}</p>
                 )}
