@@ -27,16 +27,14 @@ def create_app(config_name='development'):
         db.create_all()
 
     # 3. Register blueprints (routes)
-    # TODO: Uncomment when you create these route files
-    # from app.routes.auth import auth_bp
-    # from app.routes.student import student_bp
-    # from app.routes.lecturer import lecturer_bp
-    # from app.routes.attendance import attendance_bp
-    #
-    # app.register_blueprint(auth_bp, url_prefix='/api/auth')
-    # app.register_blueprint(student_bp, url_prefix='/api/students')
-    # app.register_blueprint(lecturer_bp, url_prefix='/api/lecturers')
-    # app.register_blueprint(attendance_bp, url_prefix='/api/attendance')
+    from app.routes.auth import auth_bp
+    from app.routes.lecturer import lecturer_bp
+    from app.routes.student import student_bp
+    from app.routes.attendance import attendance_bp
+    app.register_blueprint(auth_bp, url_prefix='/api/auth')
+    app.register_blueprint(lecturer_bp, url_prefix='/api/lecturers')
+    app.register_blueprint(student_bp, url_prefix='/api/students')
+    app.register_blueprint(attendance_bp, url_prefix='/api/attendance')
 
     # 4. Register error handlers
     @app.errorhandler(404)
