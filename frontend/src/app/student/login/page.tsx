@@ -1,18 +1,24 @@
 "use client"
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/Button';
 import { Logo } from '@/components/Logo';
 import { PasswordToggleIcon } from '@/components/PasswordToggleIcon';
+import { studentLogin } from '@/lib/api';
 
 export default function StudentLoginPage() {
+  const router = useRouter();
+
   const [formData, setFormData] = useState({
     indexNumber: '',
     pin: ''
   });
 
   const [showPin, setShowPin] = useState(false);
+  const [apiError, setApiError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -24,7 +30,20 @@ export default function StudentLoginPage() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log('Login attempt:', formData);
+    setApiError('');
+    setLoading(true);
+
+    const result = await studentLogin(formData.indexNumber, formData.pin);
+
+    setLoading(false);
+
+    if (result.success) {
+      localStorage.setItem('student_token', result.token!);
+      localStorage.setItem('student', JSON.stringify(result.student));
+      router.push('/student/dashboard');
+    } else {
+      setApiError(result.message ?? 'Login failed. Please try again.');
+    }
   };
 
   return (
@@ -90,13 +109,18 @@ export default function StudentLoginPage() {
             </div>
 
             <div className="space-y-4">
+              {apiError && (
+                <p className="text-sm text-red-600 text-center">{apiError}</p>
+              )}
+
               <Button
                 type="submit"
                 variant="primary"
                 size="md"
                 fullWidth
+                disabled={loading}
               >
-                Sign In
+                {loading ? 'Signing In...' : 'Sign In'}
               </Button>
 
               <p className="text-center text-sm text-gray-600">

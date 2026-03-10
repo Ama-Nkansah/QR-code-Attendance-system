@@ -3,19 +3,24 @@
 "use client"
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/Button';
 import { Logo } from '@/components/Logo';
 import { PasswordToggleIcon } from '@/components/PasswordToggleIcon';
+import { lecturerLogin } from '@/lib/api';
 
 export default function LecturerLoginPage() {
+  const router = useRouter();
+
   const [formData, setFormData] = useState({
-    staffId: '',
     email: '',
     password: ''
   });
 
   const [showPassword, setShowPassword] = useState(false);
+  const [apiError, setApiError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -27,7 +32,20 @@ export default function LecturerLoginPage() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log('Login attempt:', formData);
+    setApiError('');
+    setLoading(true);
+
+    const result = await lecturerLogin(formData.email, formData.password);
+
+    setLoading(false);
+
+    if (result.success) {
+      localStorage.setItem('lecturer_token', result.token!);
+      localStorage.setItem('lecturer', JSON.stringify(result.lecturer));
+      router.push('/lecturer/dashboard');
+    } else {
+      setApiError(result.message ?? 'Login failed. Please try again.');
+    }
   };
 
   return (
@@ -51,22 +69,6 @@ export default function LecturerLoginPage() {
 
           <form onSubmit={handleSubmit} className="mt-8 space-y-6">
             <div className="space-y-4">
-              <div>
-                <label htmlFor="staffId" className="block text-sm font-medium text-gray-700 mb-2">
-                  Staff ID
-                </label>
-                <input
-                  id="staffId"
-                  name="staffId"
-                  type="text"
-                  required
-                  value={formData.staffId}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition-all"
-                  placeholder="Enter your staff ID"
-                />
-              </div>
-
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
                   Email Address
@@ -116,13 +118,18 @@ export default function LecturerLoginPage() {
             </div>
 
             <div className="space-y-4">
+              {apiError && (
+                <p className="text-sm text-red-600 text-center">{apiError}</p>
+              )}
+
               <Button
                 type="submit"
                 variant="primary"
                 size="md"
                 fullWidth
+                disabled={loading}
               >
-                Sign In
+                {loading ? 'Signing In...' : 'Sign In'}
               </Button>
 
               <p className="text-center text-sm text-gray-600">

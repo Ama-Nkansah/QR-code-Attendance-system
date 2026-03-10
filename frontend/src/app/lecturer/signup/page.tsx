@@ -1,12 +1,16 @@
 "use client"
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/Button';
 import { Logo } from '@/components/Logo';
 import { PasswordToggleIcon } from '@/components/PasswordToggleIcon';
+import { lecturerRegister } from '@/lib/api';
 
 export default function LecturerSignupPage() {
+  const router = useRouter();
+
   const [formData, setFormData] = useState({
     staffId: '',
     fullName: '',
@@ -20,6 +24,9 @@ export default function LecturerSignupPage() {
     password: '',
     confirmPassword: ''
   });
+
+  const [apiError, setApiError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const [touched, setTouched] = useState({
     email: false,
@@ -124,7 +131,23 @@ export default function LecturerSignupPage() {
       return;
     }
 
-    console.log('Signup attempt:', formData);
+    setApiError('');
+    setLoading(true);
+
+    const result = await lecturerRegister(
+      formData.staffId,
+      formData.fullName,
+      formData.email,
+      formData.password,
+    );
+
+    setLoading(false);
+
+    if (result.success) {
+      router.push('/lecturer/login');
+    } else {
+      setApiError(result.message ?? 'Registration failed. Please try again.');
+    }
   };
 
   return (
@@ -257,13 +280,18 @@ export default function LecturerSignupPage() {
             </div>
 
             <div className="space-y-4">
+              {apiError && (
+                <p className="text-sm text-red-600 text-center">{apiError}</p>
+              )}
+
               <Button
                 type="submit"
                 variant="primary"
                 size="md"
                 fullWidth
+                disabled={loading}
               >
-                Create Account
+                {loading ? 'Creating Account...' : 'Create Account'}
               </Button>
 
               <p className="text-center text-sm text-gray-600">

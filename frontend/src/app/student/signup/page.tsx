@@ -1,12 +1,16 @@
 "use client"
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/Button';
 import { Logo } from '@/components/Logo';
 import { PasswordToggleIcon } from '@/components/PasswordToggleIcon';
+import { studentRegister } from '@/lib/api';
 
 export default function StudentSignupPage() {
+  const router = useRouter();
+
   const [formData, setFormData] = useState({
     indexNumber: '',
     fullName: '',
@@ -31,6 +35,8 @@ export default function StudentSignupPage() {
 
   const [showPin, setShowPin] = useState(false);
   const [showConfirmPin, setShowConfirmPin] = useState(false);
+  const [apiError, setApiError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const validateEmail = (email: string): string => {
     if (!email) return '';
@@ -128,7 +134,25 @@ export default function StudentSignupPage() {
       return;
     }
 
-    console.log('Signup attempt:', formData);
+    setApiError('');
+    setLoading(true);
+
+    const result = await studentRegister(
+      formData.indexNumber,
+      formData.fullName,
+      formData.email,
+      formData.department,
+      formData.level,
+      formData.pin,
+    );
+
+    setLoading(false);
+
+    if (result.success) {
+      router.push('/student/login');
+    } else {
+      setApiError(result.message ?? 'Registration failed. Please try again.');
+    }
   };
 
   return (
@@ -322,13 +346,18 @@ export default function StudentSignupPage() {
             </div>
 
             <div className="space-y-4">
+              {apiError && (
+                <p className="text-sm text-red-600 text-center">{apiError}</p>
+              )}
+
               <Button
                 type="submit"
                 variant="primary"
                 size="md"
                 fullWidth
+                disabled={loading}
               >
-                Create Account
+                {loading ? 'Creating Account...' : 'Create Account'}
               </Button>
 
               <p className="text-center text-sm text-gray-600">

@@ -10,6 +10,7 @@ interface ButtonProps {
   fullWidth?: boolean;
   className?: string;
   type?: 'button' | 'submit' | 'reset';
+  disabled?: boolean;
 }
 
 export const Button: React.FC<ButtonProps> = ({
@@ -20,8 +21,9 @@ export const Button: React.FC<ButtonProps> = ({
   fullWidth = false,
   className = '',
   type = 'button',
+  disabled = false,
 }) => {
-  const baseStyles = 'font-semibold rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2';
+  const baseStyles = 'font-semibold rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed';
 
   const variantStyles = {
     primary: 'bg-orange-600 text-white hover:bg-orange-700 focus:ring-orange-500',
@@ -42,6 +44,7 @@ export const Button: React.FC<ButtonProps> = ({
     <button
       type={type}
       onClick={onClick}
+      disabled={disabled}
       className={`${baseStyles} ${variantStyles[variant]} ${sizeStyles[size]} ${widthStyle} ${className}`}
     >
       {children}
