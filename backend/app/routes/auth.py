@@ -1,6 +1,6 @@
 import bcrypt
 from flask import Blueprint, jsonify, request
-from flask_jwt_extended import create_access_token
+from flask_jwt_extended import create_access_token, set_access_cookies, unset_jwt_cookies
 
 from app import db
 from app.models import Lecturer, Student
@@ -65,9 +65,8 @@ def student_login():
         additional_claims={'type': 'student'},
     )
 
-    return jsonify({
+    response = jsonify({
         'success': True,
-        'token': token,
         'student': {
             'id': student.id,
             'index_number': student.index_number,
@@ -76,7 +75,16 @@ def student_login():
             'department': student.department,
             'level': student.level,
         },
-    }), 200
+    })
+    set_access_cookies(response, token)
+    return response, 200
+
+
+@auth_bp.route('/student/logout', methods=['POST'])
+def student_logout():
+    response = jsonify({'success': True, 'message': 'Logged out successfully'})
+    unset_jwt_cookies(response)
+    return response, 200
 
 
 @auth_bp.route('/lecturer/register', methods=['POST'])
@@ -134,13 +142,21 @@ def lecturer_login():
         additional_claims={'type': 'lecturer'},
     )
 
-    return jsonify({
+    response = jsonify({
         'success': True,
-        'token': token,
         'lecturer': {
             'id': lecturer.id,
             'staff_id': lecturer.staff_id,
             'full_name': lecturer.full_name,
             'email': lecturer.email,
         },
-    }), 200
+    })
+    set_access_cookies(response, token)
+    return response, 200
+
+
+@auth_bp.route('/lecturer/logout', methods=['POST'])
+def lecturer_logout():
+    response = jsonify({'success': True, 'message': 'Logged out successfully'})
+    unset_jwt_cookies(response)
+    return response, 200
