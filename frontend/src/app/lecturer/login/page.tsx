@@ -40,7 +40,6 @@ export default function LecturerLoginPage() {
     setLoading(false);
 
     if (result.success) {
-      localStorage.setItem('lecturer_token', result.token!);
       localStorage.setItem('lecturer', JSON.stringify(result.lecturer));
       router.push('/lecturer/dashboard');
     } else {

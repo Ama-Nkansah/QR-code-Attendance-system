@@ -25,36 +25,26 @@ export interface StudentPayload {
 export interface AuthResponse {
   success: boolean;
   message?: string;
-  token?: string;
   lecturer?: LecturerPayload;
   student?: StudentPayload;
 }
 
 
-
-async function post<T>(endpoint: string, body: object, token?: string): Promise<T> {
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-  };
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
-
+async function post<T>(endpoint: string, body: object): Promise<T> {
   const res = await fetch(`${API_URL}${endpoint}`, {
     method: 'POST',
-    headers,
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
     body: JSON.stringify(body),
   });
 
   return res.json();
 }
 
-async function get<T>(endpoint: string, token: string): Promise<T> {
+async function get<T>(endpoint: string): Promise<T> {
   const res = await fetch(`${API_URL}${endpoint}`, {
     method: 'GET',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-    },
+    credentials: 'include',
   });
 
   return res.json();
@@ -76,6 +66,10 @@ export function lecturerRegister(
 
 export function lecturerLogin(email: string, password: string): Promise<AuthResponse> {
   return post('/api/auth/lecturer/login', { email, password });
+}
+
+export function lecturerLogout(): Promise<ApiResponse> {
+  return post('/api/auth/lecturer/logout', {});
 }
 
 export function studentRegister(
@@ -100,14 +94,18 @@ export function studentLogin(indexNumber: string, pin: string): Promise<AuthResp
   return post('/api/auth/student/login', { index_number: indexNumber, pin });
 }
 
+export function studentLogout(): Promise<ApiResponse> {
+  return post('/api/auth/student/logout', {});
+}
+
 // ─── Lecturer ─────────────────────────────────────────────────────────────────
 
-export function getLecturerProfile(token: string): Promise<ApiResponse<LecturerPayload>> {
-  return get('/api/lecturers/me', token);
+export function getLecturerProfile(): Promise<ApiResponse<LecturerPayload>> {
+  return get('/api/lecturers/me');
 }
 
 // ─── Student ──────────────────────────────────────────────────────────────────
 
-export function getStudentProfile(token: string): Promise<ApiResponse<StudentPayload>> {
-  return get('/api/students/me', token);
+export function getStudentProfile(): Promise<ApiResponse<StudentPayload>> {
+  return get('/api/students/me');
 }

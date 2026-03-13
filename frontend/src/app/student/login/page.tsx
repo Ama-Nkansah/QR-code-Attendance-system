@@ -38,7 +38,6 @@ export default function StudentLoginPage() {
     setLoading(false);
 
     if (result.success) {
-      localStorage.setItem('student_token', result.token!);
       localStorage.setItem('student', JSON.stringify(result.student));
       router.push('/student/dashboard');
     } else {
