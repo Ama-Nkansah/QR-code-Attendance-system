@@ -205,12 +205,12 @@ export function createCourse(body: CreateCourseBody): Promise<CourseResponse> {
   return post('/api/lecturers/courses', body);
 }
 
-export function deleteCourse(courseId: number): Promise<ApiResponse> {
-  const res = fetch(`${API_URL}/api/lecturers/courses/${courseId}`, {
+export async function deleteCourse(courseId: number): Promise<ApiResponse> {
+  const res = await fetch(`${API_URL}/api/lecturers/courses/${courseId}`, {
     method: 'DELETE',
     credentials: 'include',
   });
-  return res.then(r => r.json());
+  return res.json();
 }
 
 export function createSession(body: {
