@@ -155,10 +155,16 @@ export interface SessionResponse {
   session?: SessionPayload;
 }
 
+export interface QRPayload {
+  qrData: string;
+  expiresAt: number;
+  rotationInterval: number;
+}
+
 export interface QRResponse {
   success: boolean;
   message?: string;
-  qr?: string;
+  qr?: QRPayload;
 }
 
 export interface AttendanceRecordPayload {
@@ -189,7 +195,13 @@ export interface AttendanceHistoryResponse {
 
 // ─── Lecturer ─────────────────────────────────────────────────────────────────
 
-export function getLecturerProfile(): Promise<ApiResponse<LecturerPayload>> {
+export interface LecturerProfileResponse {
+  success: boolean;
+  message?: string;
+  lecturer?: LecturerPayload;
+}
+
+export function getLecturerProfile(): Promise<LecturerProfileResponse> {
   return get('/api/lecturers/me');
 }
 
@@ -239,7 +251,13 @@ export function getSessionRecords(sessionId: number): Promise<SessionRecordsResp
 
 // ─── Student ──────────────────────────────────────────────────────────────────
 
-export function getStudentProfile(): Promise<ApiResponse<StudentPayload>> {
+export interface StudentProfileResponse {
+  success: boolean;
+  message?: string;
+  student?: StudentPayload;
+}
+
+export function getStudentProfile(): Promise<StudentProfileResponse> {
   return get('/api/students/me');
 }
 

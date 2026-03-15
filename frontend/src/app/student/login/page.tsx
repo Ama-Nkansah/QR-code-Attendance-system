@@ -38,7 +38,6 @@ export default function StudentLoginPage() {
     setLoading(false);
 
     if (result.success) {
-      localStorage.setItem('student', JSON.stringify(result.student));
       router.push('/student/dashboard');
     } else {
       setApiError(result.message ?? 'Login failed. Please try again.');
