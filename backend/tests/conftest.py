@@ -81,3 +81,13 @@ def logged_in_lecturer(client, registered_lecturer):
     """
     client.post('/api/auth/lecturer/login', json=registered_lecturer)
     return client
+
+
+@pytest.fixture
+def logged_in_student(client, registered_student):
+    """
+    A student who is already logged in (has a session cookie).
+    Use this in tests that require student authentication.
+    """
+    client.post('/api/auth/student/login', json=registered_student)
+    return client
