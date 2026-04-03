@@ -12,7 +12,7 @@ lecturer_bp = Blueprint('lecturer', __name__)
 @lecturer_required
 def get_profile():
     lecturer_id = int(get_jwt_identity())
-    lecturer = Lecturer.query.get(lecturer_id)
+    lecturer = db.session.get(Lecturer, lecturer_id)
     if not lecturer:
         return jsonify({'success': False, 'message': 'Lecturer not found'}), 404
 

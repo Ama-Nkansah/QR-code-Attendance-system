@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify
 from flask_jwt_extended import get_jwt_identity
 
+from app import db
 from app.models import AttendanceRecord, Student
 from app.utils.decorators import student_required
 
@@ -11,7 +12,7 @@ student_bp = Blueprint('student', __name__)
 @student_required
 def get_profile():
     student_id = int(get_jwt_identity())
-    student = Student.query.get(student_id)
+    student = db.session.get(Student, student_id)
     if not student:
         return jsonify({'success': False, 'message': 'Student not found'}), 404
 

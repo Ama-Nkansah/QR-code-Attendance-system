@@ -149,7 +149,7 @@ def mark_attendance():
     if err:
         return jsonify({'success': False, 'message': err}), 400
 
-    session = Session.query.get(session_id)
+    session = db.session.get(Session, session_id)
     if not session:
         return jsonify({'success': False, 'message': 'Invalid QR code'}), 400
 
@@ -221,7 +221,7 @@ def _serialize_session(session: Session) -> dict:
 
 
 def _serialize_record_with_student(record: AttendanceRecord) -> dict:
-    student = Student.query.get(record.student_id)
+    student = db.session.get(Student, record.student_id)
     return {
         'id': record.id,
         'student_id': record.student_id,

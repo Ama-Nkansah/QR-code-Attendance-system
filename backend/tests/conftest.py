@@ -91,3 +91,58 @@ def logged_in_student(client, registered_student):
     """
     client.post('/api/auth/student/login', json=registered_student)
     return client
+
+
+@pytest.fixture
+def student_with_active_session(client, registered_student, registered_lecturer):
+    """
+    Sets up the complete attendance scenario in one fixture:
+      1. Lecturer logs in → creates a course → starts an attendance session
+      2. The session's QR secret is read directly from the database
+      3. The student then logs in (replacing the lecturer's cookie)
+
+    After this fixture runs, `client` is logged in as the STUDENT and
+    ready to call POST /api/attendance/mark.
+
+    Returns a dict with:
+      - 'client'     : the test client, authenticated as the student
+      - 'session_id' : ID of the active attendance session
+      - 'qr_secret'  : the HMAC secret used to sign/validate QR tokens
+    """
+    # Step 1: Lecturer creates a course
+    client.post('/api/auth/lecturer/login', json=registered_lecturer)
+    course_resp = client.post('/api/lecturers/courses', json={
+        'course_code': 'CS301',
+        'course_name': 'Data Structures',
+        'department': 'Computer Science',
+        'level': '300',
+        'academic_year': '2024/2025',
+        'semester': 'First',
+    })
+    course_id = course_resp.json['course']['id']
+
+    # Step 2: Lecturer starts an attendance session
+    session_resp = client.post('/api/attendance/sessions', json={
+        'course_id': course_id,
+        'session_name': 'Week 1 Lecture',
+        'duration_minutes': 60,
+        'classroom_lat': 5.6037,
+        'classroom_lng': -0.1870,
+    })
+    session_id = session_resp.json['session']['id']
+
+    # Step 3: Read the QR secret directly from the database.
+    # qr_secret is never exposed in HTTP responses (by design), so we go
+    # straight to the DB. The app context is already open from the `client`
+    # fixture, so this query works without any extra setup.
+    from app import db
+    from app.models import Session as AttendanceSession
+    attendance_session = db.session.get(AttendanceSession, session_id)
+    qr_secret = attendance_session.qr_secret
+
+    # Step 4: Switch to student.
+    # Logging in as the student overwrites the lecturer's JWT cookie so all
+    # subsequent requests on this client are authenticated as the student.
+    client.post('/api/auth/student/login', json=registered_student)
+
+    return {'client': client, 'session_id': session_id, 'qr_secret': qr_secret}

@@ -98,7 +98,7 @@ export default function ScanPage() {
           <h1 className="text-3xl font-bold text-gray-900" style={{ fontFamily: 'var(--font-poppins)' }}>
             Scan QR Code
           </h1>
-          <p className="text-gray-600 mt-1">Scan the lecturer's QR code to mark your attendance</p>
+          <p className="text-gray-600 mt-1">Scan the lecturer&apos;s QR code to mark your attendance</p>
         </div>
 
         {/* Camera viewport — always in DOM so html5-qrcode can attach */}
