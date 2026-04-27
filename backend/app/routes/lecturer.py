@@ -2,7 +2,7 @@ from flask import Blueprint, jsonify, request
 from flask_jwt_extended import get_jwt_identity
 
 from app import db
-from app.models import Course, Lecturer
+from app.models import AttendanceRecord, Course, Lecturer, Session, Student
 from app.utils.decorators import lecturer_required
 
 lecturer_bp = Blueprint('lecturer', __name__)
@@ -34,10 +34,14 @@ def create_course():
     lecturer_id = int(get_jwt_identity())
     data = request.get_json()
 
-    required = ['course_code', 'course_name', 'department', 'level', 'academic_year', 'semester']
+    required = ['course_code', 'course_name', 'department', 'level', 'academic_year', 'semester', 'planned_sessions']
     missing = [f for f in required if not data.get(f)]
     if missing:
         return jsonify({'success': False, 'message': f'Missing fields: {", ".join(missing)}'}), 400
+
+    planned = int(data['planned_sessions'])
+    if planned < 1:
+        return jsonify({'success': False, 'message': 'Planned sessions must be at least 1'}), 400
 
     course = Course(
         course_code=data['course_code'].strip().upper(),
@@ -46,6 +50,7 @@ def create_course():
         level=str(data['level']).strip(),
         academic_year=data['academic_year'].strip(),
         semester=data['semester'].strip(),
+        planned_sessions=planned,
         lecturer_id=lecturer_id,
     )
     db.session.add(course)
@@ -95,6 +100,71 @@ def delete_course(course_id: int):
     return jsonify({'success': True, 'message': 'Course deleted successfully'}), 200
 
 
+@lecturer_bp.route('/courses/<int:course_id>/report', methods=['GET'])
+@lecturer_required
+def get_course_report(course_id: int):
+    lecturer_id = int(get_jwt_identity())
+    course = Course.query.filter_by(id=course_id, lecturer_id=lecturer_id).first()
+    if not course:
+        return jsonify({'success': False, 'message': 'Course not found'}), 404
+
+    sessions = Session.query.filter_by(course_id=course_id).all()
+    sessions_held = len(sessions)
+    session_ids = [s.id for s in sessions]
+    planned = course.planned_sessions or sessions_held
+
+    if sessions_held == 0:
+        return jsonify({
+            'success': True,
+            'course': _serialize_course(course),
+            'sessions_held': 0,
+            'planned_sessions': planned,
+            'threshold': 75.0,
+            'students': [],
+        }), 200
+
+    records = (
+        db.session.query(AttendanceRecord, Student)
+        .join(Student, AttendanceRecord.student_id == Student.id)
+        .filter(AttendanceRecord.session_id.in_(session_ids))
+        .all()
+    )
+
+    student_map: dict = {}
+    for record, student in records:
+        if student.id not in student_map:
+            student_map[student.id] = {
+                'student_id': student.id,
+                'index_number': student.index_number,
+                'full_name': student.full_name,
+                'sessions_attended': 0,
+            }
+        student_map[student.id]['sessions_attended'] += 1
+
+    threshold = 75.0
+    students = []
+    for s in student_map.values():
+        pct = round((s['sessions_attended'] / planned) * 100, 1)
+        students.append({
+            **s,
+            'sessions_held': sessions_held,
+            'planned_sessions': planned,
+            'attendance_percentage': pct,
+            'below_threshold': pct < threshold,
+        })
+
+    students.sort(key=lambda x: x['full_name'])
+
+    return jsonify({
+        'success': True,
+        'course': _serialize_course(course),
+        'sessions_held': sessions_held,
+        'planned_sessions': planned,
+        'threshold': threshold,
+        'students': students,
+    }), 200
+
+
 def _serialize_course(course: Course) -> dict:
     return {
         'id': course.id,
@@ -104,5 +174,6 @@ def _serialize_course(course: Course) -> dict:
         'level': course.level,
         'academic_year': course.academic_year,
         'semester': course.semester,
+        'planned_sessions': course.planned_sessions,
         'created_at': course.created_at.isoformat(),
     }

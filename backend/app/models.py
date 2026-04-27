@@ -45,6 +45,7 @@ class Course(db.Model):
     level = db.Column(db.String(10), nullable=False)
     academic_year = db.Column(db.String(20), nullable=False)
     semester = db.Column(db.String(5), nullable=False)
+    planned_sessions = db.Column(db.Integer, nullable=True)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     # Foreign key — links this course to the lecturer who created it
     # db.ForeignKey means: this value must exist as an id in the lecturers table
