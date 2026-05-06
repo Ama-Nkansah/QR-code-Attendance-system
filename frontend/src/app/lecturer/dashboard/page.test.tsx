@@ -17,6 +17,7 @@ jest.mock('@/lib/api', () => ({
   createSession: jest.fn(),
   getSessionQR: jest.fn(),
   endSession: jest.fn(),
+  getCourseReport: jest.fn(),
   lecturerLogout: jest.fn(),
 }));
 
@@ -258,6 +259,7 @@ describe('LecturerDashboard', () => {
     await user.type(screen.getByPlaceholderText('e.g. 300'), '400');
     await user.type(screen.getByPlaceholderText('e.g. 2025/2026'), '2025/2026');
     await user.type(screen.getByPlaceholderText('1 or 2'), '1');
+    await user.type(screen.getByPlaceholderText('e.g. 40'), '40');
     await user.click(screen.getByRole('button', { name: 'Create Course' }));
 
     await waitFor(() => {
@@ -282,6 +284,7 @@ describe('LecturerDashboard', () => {
     await user.type(screen.getByPlaceholderText('e.g. 300'), '300');
     await user.type(screen.getByPlaceholderText('e.g. 2025/2026'), '2025/2026');
     await user.type(screen.getByPlaceholderText('1 or 2'), '1');
+    await user.type(screen.getByPlaceholderText('e.g. 40'), '40');
     await user.click(screen.getByRole('button', { name: 'Create Course' }));
 
     await waitFor(() => {

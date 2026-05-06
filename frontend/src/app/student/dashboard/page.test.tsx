@@ -13,12 +13,14 @@ jest.mock('next/navigation', () => ({
 jest.mock('@/lib/api', () => ({
   getStudentProfile: jest.fn(),
   getAttendanceHistory: jest.fn(),
+  getStudentCoursesSummary: jest.fn(),
   studentLogout: jest.fn(),
 }));
 
-import { getStudentProfile, getAttendanceHistory, studentLogout } from '@/lib/api';
+import { getStudentProfile, getAttendanceHistory, getStudentCoursesSummary, studentLogout } from '@/lib/api';
 const mockGetStudentProfile = getStudentProfile as jest.Mock;
 const mockGetAttendanceHistory = getAttendanceHistory as jest.Mock;
+const mockGetStudentCoursesSummary = getStudentCoursesSummary as jest.Mock;
 const mockStudentLogout = studentLogout as jest.Mock;
 
 // ── Fixtures ───────────────────────────────────────────────────────────────────
@@ -56,6 +58,7 @@ const RECORDS = [
 beforeEach(() => {
   jest.clearAllMocks();
   mockStudentLogout.mockResolvedValue({ success: true });
+  mockGetStudentCoursesSummary.mockResolvedValue({ success: true, courses: [] });
 });
 
 describe('StudentDashboard', () => {
