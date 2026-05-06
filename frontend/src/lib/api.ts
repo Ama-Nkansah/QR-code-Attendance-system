@@ -108,6 +108,7 @@ export interface CoursePayload {
   level: string;
   academic_year: string;
   semester: string;
+  planned_sessions: number | null;
   created_at: string;
 }
 
@@ -130,6 +131,7 @@ export interface CreateCourseBody {
   level: string;
   academic_year: string;
   semester: string;
+  planned_sessions: number;
 }
 
 // ─── Sessions ─────────────────────────────────────────────────────────────────
@@ -191,6 +193,45 @@ export interface AttendanceHistoryResponse {
   message?: string;
   records?: AttendanceRecordPayload[];
   total?: number;
+}
+
+export interface StudentCourseSummary {
+  course_id: number;
+  course_code: string;
+  course_name: string;
+  department: string;
+  level: string;
+  sessions_attended: number;
+  total_sessions: number;
+  attendance_percentage: number;
+  can_write_exam: boolean;
+}
+
+export interface StudentCoursesSummaryResponse {
+  success: boolean;
+  message?: string;
+  threshold?: number;
+  courses?: StudentCourseSummary[];
+}
+
+export interface StudentReportRow {
+  student_id: number;
+  index_number: string;
+  full_name: string;
+  sessions_attended: number;
+  total_sessions: number;
+  attendance_percentage: number;
+  below_threshold: boolean;
+}
+
+export interface CourseReportResponse {
+  success: boolean;
+  message?: string;
+  course?: CoursePayload;
+  sessions_held?: number;
+  planned_sessions?: number;
+  threshold?: number;
+  students?: StudentReportRow[];
 }
 
 // ─── Lecturer ─────────────────────────────────────────────────────────────────
@@ -263,6 +304,14 @@ export function getStudentProfile(): Promise<StudentProfileResponse> {
 
 export function getAttendanceHistory(): Promise<AttendanceHistoryResponse> {
   return get('/api/students/attendance');
+}
+
+export function getStudentCoursesSummary(): Promise<StudentCoursesSummaryResponse> {
+  return get('/api/students/courses/summary');
+}
+
+export function getCourseReport(courseId: number): Promise<CourseReportResponse> {
+  return get(`/api/lecturers/courses/${courseId}/report`);
 }
 
 export function markAttendance(

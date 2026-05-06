@@ -271,6 +271,7 @@ describe('getCourses', () => {
           level: '300',
           academic_year: '2025/2026',
           semester: 'First',
+          planned_sessions: 40,
           created_at: '2025-09-01T00:00:00Z',
         },
       ],
@@ -307,6 +308,7 @@ describe('getCourse', () => {
         level: '300',
         academic_year: '2025/2026',
         semester: 'First',
+        planned_sessions: 40,
         created_at: '2025-09-01T00:00:00Z',
       },
     };
@@ -340,6 +342,7 @@ describe('createCourse', () => {
       level: '300',
       academic_year: '2025/2026',
       semester: 'First',
+      planned_sessions: 40,
     };
     const expected: CourseResponse = {
       success: true,

@@ -7,12 +7,15 @@ import { Button } from '@/components/Button';
 import { Logo } from '@/components/Logo';
 import {
   CoursePayload,
+  CourseReportResponse,
   CreateCourseBody,
   SessionPayload,
+  StudentReportRow,
   createCourse,
   createSession,
   deleteCourse,
   endSession,
+  getCourseReport,
   getCourses,
   getLecturerProfile,
   getSessionQR,
@@ -20,7 +23,7 @@ import {
   LecturerPayload,
 } from '@/lib/api';
 
-type Modal = 'create-course' | 'start-session' | 'active-session' | null;
+type Modal = 'create-course' | 'start-session' | 'active-session' | 'course-report' | null;
 
 const INPUT_CLASS =
   'w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition-all';
@@ -37,6 +40,9 @@ export default function LecturerDashboard() {
   const [activeSession, setActiveSession] = useState<SessionPayload | null>(null);
   const [qrData, setQrData] = useState('');
   const [qrLoading, setQrLoading] = useState(false);
+  const [reportCourse, setReportCourse] = useState<CoursePayload | null>(null);
+  const [reportData, setReportData] = useState<CourseReportResponse | null>(null);
+  const [reportLoading, setReportLoading] = useState(false);
 
   const [courseForm, setCourseForm] = useState<CreateCourseBody>({
     course_code: '',
@@ -45,6 +51,7 @@ export default function LecturerDashboard() {
     level: '',
     academic_year: '',
     semester: '',
+    planned_sessions: 0,
   });
   const [courseFormError, setCourseFormError] = useState('');
   const [courseFormLoading, setCourseFormLoading] = useState(false);
@@ -108,7 +115,7 @@ export default function LecturerDashboard() {
     if (res.success && res.course) {
       setCourses(prev => [...prev, res.course!]);
       setModal(null);
-      setCourseForm({ course_code: '', course_name: '', department: '', level: '', academic_year: '', semester: '' });
+      setCourseForm({ course_code: '', course_name: '', department: '', level: '', academic_year: '', semester: '', planned_sessions: 0 });
     } else {
       setCourseFormError(res.message ?? 'Failed to create course');
     }
@@ -156,6 +163,37 @@ export default function LecturerDashboard() {
     setModal(null);
     setActiveSession(null);
     setQrData('');
+  };
+
+  const handleViewReport = async (course: CoursePayload) => {
+    setReportCourse(course);
+    setReportData(null);
+    setReportLoading(true);
+    setModal('course-report');
+    const res = await getCourseReport(course.id);
+    setReportData(res);
+    setReportLoading(false);
+  };
+
+  const handleDownloadCSV = () => {
+    if (!reportData?.students || !reportCourse) return;
+    const headers = ['Index Number', 'Full Name', 'Sessions Attended', 'Total Sessions', 'Attendance %', 'Status'];
+    const rows = reportData.students.map((s: StudentReportRow) => [
+      s.index_number,
+      s.full_name,
+      s.sessions_attended,
+      s.total_sessions,
+      `${s.attendance_percentage}%`,
+      s.below_threshold ? 'Below Threshold' : 'OK',
+    ]);
+    const csv = [headers, ...rows].map(r => r.join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${reportCourse.course_code}_attendance_report.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   if (loading) {
@@ -228,6 +266,9 @@ export default function LecturerDashboard() {
                   <Button variant="outline_gray" size="sm" onClick={() => handleDeleteCourse(course.id)}>
                     Delete
                   </Button>
+                  <Button variant="outline_gray" size="sm" onClick={() => handleViewReport(course)}>
+                    Report
+                  </Button>
                 </div>
               </div>
             ))}
@@ -268,6 +309,29 @@ export default function LecturerDashboard() {
                   />
                 </div>
               ))}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Planned Sessions This Semester
+                </label>
+                <input
+                  type="number"
+                  required
+                  min={1}
+                  placeholder="e.g. 40"
+                  value={courseForm.planned_sessions || ''}
+                  onChange={e => setCourseForm(prev => ({ ...prev, planned_sessions: Number(e.target.value) }))}
+                  className={INPUT_CLASS}
+                />
+                {courseForm.planned_sessions > 0 && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    {courseForm.planned_sessions} sessions &times; 75% = students must attend at least{' '}
+                    <span className="font-semibold text-orange-600">
+                      {Math.ceil(courseForm.planned_sessions * 0.75)} sessions
+                    </span>{' '}
+                    to write the exam
+                  </p>
+                )}
+              </div>
               {courseFormError && <p className="text-sm text-red-600">{courseFormError}</p>}
               <div className="flex gap-3 pt-2">
                 <Button type="button" variant="outline_gray" size="md" fullWidth onClick={() => setModal(null)}>
@@ -354,6 +418,90 @@ export default function LecturerDashboard() {
                 </Button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Course Report Modal */}
+      {modal === 'course-report' && reportCourse && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+            <div className="bg-orange-600 px-6 py-4 flex justify-between items-center rounded-t-2xl shrink-0">
+              <div>
+                <h2 className="text-xl font-bold text-white">{reportCourse.course_code} — Attendance Report</h2>
+                <p className="text-orange-100 text-xs">{reportCourse.course_name}</p>
+              </div>
+              <button onClick={() => setModal(null)} className="text-white hover:text-orange-100">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="p-6 overflow-y-auto flex-1">
+              {reportLoading ? (
+                <p className="text-center text-gray-500 py-8">Loading report...</p>
+              ) : !reportData?.success ? (
+                <p className="text-center text-red-500 py-8">{reportData?.message ?? 'Failed to load report'}</p>
+              ) : (
+                <>
+                  <div className="flex justify-between items-center mb-4">
+                    <p className="text-sm text-gray-600">
+                      Sessions held: <span className="font-semibold text-gray-900">{reportData.sessions_held}</span>
+                      <span className="mx-2 text-gray-300">/</span>
+                      Planned: <span className="font-semibold text-gray-900">{reportData.planned_sessions}</span>
+                      <span className="ml-4 text-orange-600 font-medium">
+                        Min. to pass: {Math.ceil((reportData.planned_sessions ?? 0) * 0.75)} sessions (75%)
+                      </span>
+                    </p>
+                    <Button variant="outline_gray" size="sm" onClick={handleDownloadCSV}>
+                      Download CSV
+                    </Button>
+                  </div>
+
+                  {reportData.students?.length === 0 ? (
+                    <p className="text-center text-gray-500 py-8">No attendance records yet for this course.</p>
+                  ) : (
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-gray-200 text-left text-gray-500 text-xs uppercase tracking-wide">
+                          <th className="pb-2 pr-4">Index No.</th>
+                          <th className="pb-2 pr-4">Name</th>
+                          <th className="pb-2 pr-4 text-center">Attended</th>
+                          <th className="pb-2 pr-4 text-center">%</th>
+                          <th className="pb-2 text-center">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {reportData.students?.map(s => (
+                          <tr key={s.student_id} className="border-b border-gray-100 hover:bg-gray-50">
+                            <td className="py-2 pr-4 text-gray-600">{s.index_number}</td>
+                            <td className="py-2 pr-4 font-medium text-gray-900">{s.full_name}</td>
+                            <td className="py-2 pr-4 text-center text-gray-700">
+                              {s.sessions_attended}/{s.total_sessions}
+                            </td>
+                            <td className="py-2 pr-4 text-center font-semibold text-gray-900">
+                              {s.attendance_percentage}%
+                            </td>
+                            <td className="py-2 text-center">
+                              {s.below_threshold ? (
+                                <span className="inline-block bg-red-100 text-red-700 text-xs font-semibold px-2 py-0.5 rounded-full">
+                                  Below 75%
+                                </span>
+                              ) : (
+                                <span className="inline-block bg-green-100 text-green-700 text-xs font-semibold px-2 py-0.5 rounded-full">
+                                  OK
+                                </span>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
+                </>
+              )}
+            </div>
           </div>
         </div>
       )}
