@@ -28,6 +28,7 @@ COURSE_DATA = {
     'level': '300',
     'academic_year': '2024/2025',
     'semester': 'First',
+    'planned_sessions': 40,
 }
 
 SESSION_DATA = {

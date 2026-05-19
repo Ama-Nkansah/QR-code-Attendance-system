@@ -118,6 +118,7 @@ def student_with_active_session(client, registered_student, registered_lecturer)
         'level': '300',
         'academic_year': '2024/2025',
         'semester': 'First',
+        'planned_sessions': 40,
     })
     course_id = course_resp.json['course']['id']
 
