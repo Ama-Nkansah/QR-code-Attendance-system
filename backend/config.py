@@ -56,6 +56,15 @@ class ProductionConfig(Config):
     """Production configuration"""
     DEBUG = False
     TESTING = False
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        'pool_pre_ping': True,
+        'pool_recycle': 3600,
+        'connect_args': {
+            'ssl_disabled': False,
+            'ssl_verify_cert': False,
+            'ssl_verify_identity': False,
+        }
+    }
 
 
 class TestingConfig(Config):
